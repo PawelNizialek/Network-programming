@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/select.h>
-#define PORT 5000
 void check(int returned_number){
     if(returned_number==-1) {
         fprintf(stdout, "error");
