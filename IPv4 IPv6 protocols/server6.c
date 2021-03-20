@@ -11,12 +11,6 @@
 #include <sys/types.h>
 #include <sys/select.h>
 
-void check(int returned_number){
-    if(returned_number==-1) {
-        fprintf(stdout, "error");
-        exit(-1);
-    }
-}
 int main(int argc, char** argv) {
 
     char buff[256];
@@ -39,8 +33,6 @@ int main(int argc, char** argv) {
     server.sin6_port = htons(atoi(argv[1]));
     // serwer moze odbierac dane z dowolnego interfejsu sieciowego
     server.sin6_addr = in6addr_any;
-    // server.sin6_flowinfo = 
-    // server.sin6_scope_id = 
     check(bind(sockfd, (struct sockaddr*) &server, sizeof(struct sockaddr_in6)));
     /* Przeksztalcenie gniazda niepolaczonego w bierne: 
     Nadanie dlugosci kolejki */
