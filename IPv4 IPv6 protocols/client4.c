@@ -6,22 +6,21 @@
 #include <unistd.h> 
 #include <string.h>
 #include <errno.h>
-#include <net/if.h>
 
 int main(int argc, char** argv) {
 
-    if (argc != 4) {
-        fprintf(stderr, "Invocation: %s <IPv4 ADDRESS> <PORT> <INTERFACE NAME>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stderr, "Invocation: %s <IPv4 ADDRESS> <PORT>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     int sockfd;
     int retval;
-    struct sockaddr_in6 remote_addr;
+    struct sockaddr_in remote_addr;
     socklen_t addr_len;
     char buff[256];
 
-    sockfd = socket(PF_INET6, SOCK_STREAM, 0);
+    sockfd = socket(PF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("socket()");
         exit(EXIT_FAILURE);
@@ -29,9 +28,9 @@ int main(int argc, char** argv) {
 
     memset(&remote_addr, 0, sizeof(remote_addr));
 
-    remote_addr.sin6_family = AF_INET6;
+    remote_addr.sin_family = AF_INET;
 
-    retval = inet_pton(AF_INET6, argv[1], &remote_addr.sin6_addr);
+    retval = inet_pton(AF_INET, argv[1], &remote_addr.sin_addr);
     if (retval == 0) {
         fprintf(stderr, "inet_pton(): invalid network address!\n");
         exit(EXIT_FAILURE);
@@ -40,12 +39,10 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    remote_addr.sin6_port = htons(atoi(argv[2]));
-    remote_addr.sin6_scope_id = htons(if_nametoindex(argv[3]));
+    remote_addr.sin_port = htons(atoi(argv[2]));
     addr_len = sizeof(remote_addr);
 
-
-    if (connect(sockfd, (struct sockaddr*) &remote_addr, addr_len) == -1) {
+    if (connect(sockfd, (const struct sockaddr*) &remote_addr, addr_len) == -1) {
         perror("connect()");
         exit(EXIT_FAILURE);
     }
