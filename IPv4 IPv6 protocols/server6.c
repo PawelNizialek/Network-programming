@@ -11,6 +11,12 @@
 #include <sys/types.h>
 #include <sys/select.h>
 
+void check(int returned_number){
+    if(returned_number==-1) {
+        fprintf(stdout, "error");
+        exit(-1);
+    }
+}
 int main(int argc, char** argv) {
 
     char buff[256];
