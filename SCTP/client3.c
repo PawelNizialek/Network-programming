@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     }
 
     // socket()
-    sockfd = socket(result->ai_family, result->ai_socktype, IPPROTO_SCTP);
+    sockfd = socket(result->ai_family, SOCK_STREAM, IPPROTO_SCTP);
     if (sockfd == -1) {
         perror("socket()");
         exit(EXIT_FAILURE);
@@ -77,8 +77,8 @@ int main(int argc, char** argv) {
 
     freeaddrinfo(result);
 
-    // for(;;)
-    // {
+    for(;;)
+    {
         retval = sctp_sendmsg(sockfd, (void*)message, BUFF_SIZE, result->ai_addr, result->ai_addrlen,
         0, 0, stream_number, 10, 0);
         if (retval == -1) {
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         retval = write(STDOUT_FILENO, message, bytes);
         printf("\n");
 
-    // }
+    }
 
     close(sockfd);
     exit(EXIT_SUCCESS);
