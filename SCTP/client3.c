@@ -14,7 +14,7 @@
 #define BUFF_SIZE 256
 #define REC_STREAMS 2
 #define IN_STREAMS 4
-#define O_STREAMS 3
+#define O_STREAMS 4
 #define MAX_ATTEPTS 5
 
 int main(int argc, char** argv) {
@@ -26,12 +26,13 @@ int main(int argc, char** argv) {
     char                    buff[BUFF_SIZE];
     struct sctp_initmsg initmsg;
     struct sctp_status status;
-    struct sctp_sndrcvinfo sndrcvinfo;
+    struct sctp_sndrcvinfo sinfo;
     struct sockaddr from;
     socklen_t fromlen = sizeof(from);
     socklen_t optlen = sizeof(struct sctp_status);
     int i = 0;
-    char message[BUFF_SIZE] = "message";
+    char message[BUFF_SIZE] = "[CLIENT] message";
+    int stream_number = 0;
 
     if (argc != 3) {
         fprintf(stderr, "Invocation: %s <IP ADDRESS> <PORT NUMBER>\n", argv[0]);
@@ -76,64 +77,32 @@ int main(int argc, char** argv) {
 
     freeaddrinfo(result);
 
-    for(;;)
-    {
+    // for(;;)
+    // {
         retval = sctp_sendmsg(sockfd, (void*)message, BUFF_SIZE, result->ai_addr, result->ai_addrlen,
-        0, 0, 0, 10, 0);
+        0, 0, stream_number, 10, 0);
         if (retval == -1) {
             perror("sctp_sendmsg()");
             exit(EXIT_FAILURE);
         }
 
-        bytes = sctp_recvmsg(sockfd, message, sizeof(message), &from, &fromlen, &sndrcvinfo, NULL);
+        bytes = sctp_recvmsg(sockfd, message, sizeof(message), result->ai_addr, &(result->ai_addrlen), &sinfo, NULL);
         if (bytes == -1) {
             perror("recvmsg()");
             exit(EXIT_FAILURE);
         }
 
+        printf("[CLIENT] ID: %u\n", sinfo.sinfo_assoc_id);
+        printf("[CLIENT] SSN: %u\n", sinfo.sinfo_ssn);
+        printf("[CLIENT] TSN: %u\n", sinfo.sinfo_tsn);
+        printf("[CLIENT] STREAM: %u\n", sinfo.sinfo_stream);
+
+        stream_number = sinfo.sinfo_stream;
+
         retval = write(STDOUT_FILENO, message, bytes);
         printf("\n");
 
-    }
-        // retval = sctp_sendmsg(sockfd, (void*)message, BUFF_SIZE, result->ai_addr, result->ai_addrlen,
-        // 0, 0, 0, 10, 0);
-
-        // if (retval == -1) {
-        //     perror("sctp_sendmsg()");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // bytes = sctp_recvmsg(sockfd, message, sizeof(message), NULL, 0, &sndrcvinfo, NULL);
-        // if (bytes == -1) {
-        //     perror("recv()");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // retval = write(STDOUT_FILENO, message, bytes);
-        // printf("\n");
-
-        // bytes = sctp_recvmsg(sockfd, buff, sizeof(buff), NULL, 0, &sndrcvinfo, NULL);
-        // if (bytes == -1) {
-        //     perror("recv()");
-        //     exit(EXIT_FAILURE);
-        // }
-        // i++;
-        
-        // retval = write(STDOUT_FILENO, buff, bytes);
-        // printf("\n");
     // }
-
-    // retval = getsockopt(sockfd, IPPROTO_SCTP, SCTP_STATUS, &status, &optlen);
-
-    // if(retval<0){
-    //     fprintf(stderr, "getsockopt()\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // printf("[CLIENT] Connected; ID: %u\n", status.sstat_assoc_id);
-    // printf("[CLIENT] Status: %u\n", status.sstat_state);
-    // printf("[CLIENT] Input streams: %u\n", status.sstat_instrms);
-    // printf("[CLIENT] Output streams: %u\n", status.sstat_outstrms);
 
     close(sockfd);
     exit(EXIT_SUCCESS);

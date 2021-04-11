@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
     struct sctp_sndrcvinfo sndrcvinfo;
     socklen_t optlen = sizeof(struct sctp_status);
     int i = 0;
-    // struct sctp_event_subscribe events;
 
     if (argc != 3) {
         fprintf(stderr, "Invocation: %s <IP ADDRESS> <PORT NUMBER>\n", argv[0]);
@@ -59,16 +58,6 @@ int main(int argc, char** argv) {
         perror("socket()");
         exit(EXIT_FAILURE);
     }
-
-    // events.sctp_association_event = 1;
-    // events.sctp_data_io_event = 1;
-
-    // retval = setsockopt(sockfd, IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events));
-
-    // if(retval<0){
-    //     fprintf(stderr, "setsockopt()\n");
-    //     exit(EXIT_FAILURE);
-    // }
 
     memset(&initmsg, 0, sizeof(struct sctp_initmsg));
     initmsg.sinit_max_instreams = IN_STREAMS;
@@ -103,33 +92,15 @@ int main(int argc, char** argv) {
     freeaddrinfo(result);
 
     while (i < REC_STREAMS) {
-        // retptr = fgets(buff, BUFF_SIZE, stdin);
-        // if ((retptr == NULL) || (strcmp(buff, "\n") == 0)) {
-        //     break;
-        // }
-
-        // bytes = send(sockfd, buff, strlen(buff), 0);
-        // if (bytes == -1) {
-        //     perror("send()");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // bytes = recv(sockfd, (void*)buff, BUFF_SIZE, 0);
         bytes = sctp_recvmsg(sockfd, buff, sizeof(buff), NULL, 0, &sndrcvinfo, NULL);
         if (bytes == -1) {
             perror("recv()");
             exit(EXIT_FAILURE);
         }
         i++;
-
-
-
-        // printf("%c", bu);
-        // fflush(stdout);
         retval = write(STDOUT_FILENO, buff, bytes);
         printf("\n");
     }
-
     close(sockfd);
     exit(EXIT_SUCCESS);
 }

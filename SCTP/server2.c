@@ -14,6 +14,10 @@
 #include <assert.h>
 
 #define BUFF_SIZE 256
+#define REC_STREAMS 2
+#define IN_STREAMS 2
+#define O_STREAMS 2
+#define MAX_ATTEPTS 5
 
 int main(int argc, char** argv) {
 
@@ -22,6 +26,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in      servaddr;
     char                    buffer[BUFF_SIZE];
     char message[BUFF_SIZE] = "message";
+    struct sctp_initmsg initmsg;
 
     if (argc != 2) {
         fprintf(stderr, "Invocation: %s <PORT NUMBER>\n", argv[0]);
@@ -40,6 +45,18 @@ int main(int argc, char** argv) {
     servaddr.sin_family             =       AF_INET;
     servaddr.sin_port               =       htons(atoi(argv[1]));
     servaddr.sin_addr.s_addr        =       htonl(INADDR_ANY);
+
+    memset(&initmsg, 0, sizeof(struct sctp_initmsg));
+    initmsg.sinit_max_instreams = IN_STREAMS;
+    initmsg.sinit_num_ostreams = O_STREAMS;
+    initmsg.sinit_max_attempts = MAX_ATTEPTS;
+
+    retval = setsockopt(listenfd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(struct sctp_initmsg));
+
+    if(retval<0){
+        fprintf(stderr, "setsockopt()\n");
+        exit(EXIT_FAILURE);
+    }
 
     // bind()
     if (bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1) {
@@ -63,7 +80,6 @@ int main(int argc, char** argv) {
 
         time_t t = time(NULL);
         struct tm* tm = localtime(&t);
-        // char [BUFF_SIZE];
         strftime(message, sizeof(message), "[SERVER] %I:%M%p", tm);
 
         retval = sctp_sendmsg(connfd, (void*)message, BUFF_SIZE, NULL, 0, 0,
@@ -81,25 +97,8 @@ int main(int argc, char** argv) {
         if (retval == -1) {
             perror("sctp_sendmsg()");
             exit(EXIT_FAILURE);
-        }
-
-        // bytes = recv(connfd, (void*)buffer, BUFF_SIZE, 0);
-        // if (bytes == -1) {
-        //     perror("recv() failed");
-        //     exit(EXIT_FAILURE);
-        // } else if (bytes == 0) {
-        //     close(connfd);
-        //     close(listenfd);
-        //     exit(EXIT_SUCCESS);
-        // }
-
-        // retval = write(STDOUT_FILENO, buffer, bytes);
-
-        // if (send(connfd, buffer, bytes, 0) == -1) {
-        //     perror("send()");
-        //     exit(EXIT_FAILURE);
-        // }
-        
+        } 
     }
-
+    close(connfd);
+    close(listenfd);
 }
